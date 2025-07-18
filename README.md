@@ -24,43 +24,54 @@ Yolo-for-GitHub/
 └── train_*.py              # 各式训练脚本
 ```
 
-## 🚀 环境设置
+## 🚀 一键启动训练 (推荐)
 
-### 方案一: 使用 Docker (推荐)
+我们提供了一个 `start_training.sh` 脚本，可以实现一键启动训练，无需手动修改任何配置文件。
 
-这是最推荐的方式，可以保证环境的完全一致性。
+### 1. 准备云端环境
 
-1.  **安装 Docker**: 请确保您的系统中已安装 [Docker](https://www.docker.com/products/docker-desktop)。
+在您的云端服务器（如 Cloud Studio）上，确保您的目录结构满足以下**约定**：
 
-2.  **构建 Docker 镜像**: 在项目根目录下，运行以下命令：
+```
+/home/user/workspace/  (可以是任何根目录)
+├── datasets/
+│   └── tiaozhanbei_sequence_split/  <-- 您上传的、已分割好的数据集
+│       ├── images/
+│       ├── labels/
+│       └── tiaozhanbei_seq_data.yaml
+│
+└── Yolo-for-GitHub/                 <-- 从 Git 克隆的本项目
+    ├── scripts/
+    ├── configs/
+    └── start_training.sh
+```
+
+**操作步骤**:
+1.  **克隆本项目**:
     ```bash
-    docker build -t yolo-project .
+    git clone https://github.com/Your-Username/Yolo-for-GitHub.git
     ```
+2.  **上传数据集**:
+    将您本地已处理好的 `tiaozhanbei_sequence_split` 文件夹，整个上传到与 `Yolo-for-GitHub` **并列**的 `datasets` 文件夹中。
 
-3.  **运行 Docker 容器**:
-    ```bash
-    # -it: 交互式运行
-    # --rm: 容器停止后自动删除
-    # -v: 将本地的数据集和输出目录挂载到容器中
-    docker run -it --rm \
-      -v /path/to/your/datasets:/app/datasets \
-      -v /path/to/your/outputs:/app/runs \
-      yolo-project
-    ```
-    请将 `/path/to/your/datasets` 和 `/path/to/your/outputs` 替换为您本地的实际路径。
+3.  **(可选) 准备预训练模型**:
+    将您的预训练权重（如 `yolov8n.pt`）放入 `Yolo-for-GitHub/models/` 目录下。如果找不到，脚本会自动从头开始训练。
 
-### 方案二: 本地环境手动设置
+### 2. 执行一键启动脚本
 
-1.  **克隆仓库**:
-    ```bash
-    git clone https://github.com/your-username/Yolo-for-GitHub.git
-    cd Yolo-for-GitHub
-    ```
+进入项目目录，并赋予脚本执行权限，然后运行它。
 
-2.  **安装依赖**:
-    ```bash
-    pip install -r requirements.txt
-    ```
+```bash
+cd Yolo-for-GitHub
+chmod +x start_training.sh
+./start_training.sh
+```
+
+脚本会自动寻找数据集配置、检查模型、并启动 `train_yolov11_gpu_optimized.py` 脚本进行训练。训练结果将保存在 `Yolo-for-GitHub` 外的 `training_runs` 文件夹中，以保持项目目录的干净。
+
+## 🛠️ 手动执行 (高级)
+
+如果您想更精细地控制每个参数，可以绕过启动脚本，手动执行训练命令。请参考 `start_training.sh` 脚本中的 `python` 命令进行修改。
 
 ## 📖 如何使用
 
