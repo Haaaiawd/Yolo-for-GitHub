@@ -1,0 +1,38 @@
+# Datasets and Results
+datasets/
+results/
+runs/
+
+# Models
+models/
+*.pt
+*.onnx
+
+# Node.js dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# IDE and OS-specific files
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Documents and temporary files
+*.docx
+*.log
+*.cache
+archived/
+
+# Jupyter Notebook - commit only if output is cleared
+# *.ipynb
+
+# Tool-specific directories
+.claude/ 
