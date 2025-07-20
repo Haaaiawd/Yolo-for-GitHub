@@ -1,0 +1,18 @@
+# 挑战杯数据集配置文件 - 最终版本
+# 数据集总样本数: 157,872
+# 类别分布已优化，各类别样本充足
+
+path: D:\Yolo\datasets\balanced_tiaozhanbei_split
+train: D:\Yolo\datasets\balanced_tiaozhanbei_split\images\train
+val: D:\Yolo\datasets\balanced_tiaozhanbei_split\images\val
+test: D:\Yolo\datasets\balanced_tiaozhanbei_split\images\test
+
+# 类别配置 (6个类别)
+nc: 6
+names:
+  0: drone      # 13,393 samples
+  1: bus        # 28,284 samples
+  2: ship       # 7,753 samples
+  3: car        # 46,680 samples
+  4: cyclist    # 12,364 samples
+  5: pedestrian # 49,398 samples

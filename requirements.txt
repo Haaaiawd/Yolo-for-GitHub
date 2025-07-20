@@ -1,5 +1,14 @@
-numpy==2.3.1
-openvino==2025.2.0
-torch==2.7.1
-tqdm==4.66.4
-ultralytics==8.3.168
+# YOLOv11 5通道训练依赖 - T4 GPU优化版本
+numpy>=1.21.0
+opencv-python>=4.5.0
+torch>=2.0.0
+torchvision>=0.15.0
+tqdm>=4.64.0
+ultralytics>=8.3.0
+PyYAML>=6.0
+Pillow>=8.3.0
+matplotlib>=3.3.0
+scipy>=1.7.0
+
+# GPU加速相关
+# torch 和 torchvision 需要CUDA版本，在云端环境中通常预装
