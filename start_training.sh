@@ -21,7 +21,8 @@ set -e # 如果任何命令失败，则立即退出脚本
 # 基于脚本自身位置的相对路径，确保可移植性
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_ROOT="$SCRIPT_DIR/.."
-PREPROCESSING_SCRIPTS_DIR="$PROJECT_ROOT/scripts/data_preprocessing"
+# 修复：脚本在当前项目目录下，不是上级目录
+PREPROCESSING_SCRIPTS_DIR="$SCRIPT_DIR/scripts/data_preprocessing"
 
 # 最终需要检查的关键文件和目录
 FINAL_DATASET_DIR="$PROJECT_ROOT/datasets/balanced_tiaozhanbei_split"
@@ -84,20 +85,40 @@ if [ "$need_preprocessing" = true ]; then
 
     # 依次执行预处理脚本
     echo "  ▶️ [Step A] 检查文件结构..."
-    python "$PREPROCESSING_SCRIPTS_DIR/organize_files.py"
-    echo "  ✅ 文件结构检查完成。"
+    echo "     脚本路径: $PREPROCESSING_SCRIPTS_DIR/organize_files.py"
+    if [ -f "$PREPROCESSING_SCRIPTS_DIR/organize_files.py" ]; then
+        python "$PREPROCESSING_SCRIPTS_DIR/organize_files.py"
+        echo "  ✅ 文件结构检查完成。"
+    else
+        echo "  ❌ 错误: 找不到organize_files.py脚本"
+        echo "     期望路径: $PREPROCESSING_SCRIPTS_DIR/organize_files.py"
+        echo "     当前目录: $(pwd)"
+        echo "     脚本目录内容:"
+        ls -la "$PREPROCESSING_SCRIPTS_DIR/" || echo "     目录不存在"
+        exit 1
+    fi
 
     echo "  ▶️ [Step B] 🌊 批量计算光流 (云端GPU加速)..."
     echo "     这可能需要10-30分钟，请耐心等待..."
     start_time=$(date +%s)
-    python "$PREPROCESSING_SCRIPTS_DIR/compute_optical_flow.py"
-    end_time=$(date +%s)
-    duration=$((end_time - start_time))
-    echo "  ✅ 光流计算完成，耗时: ${duration}秒 ($((duration/60))分钟)"
+    if [ -f "$PREPROCESSING_SCRIPTS_DIR/compute_optical_flow.py" ]; then
+        python "$PREPROCESSING_SCRIPTS_DIR/compute_optical_flow.py"
+        end_time=$(date +%s)
+        duration=$((end_time - start_time))
+        echo "  ✅ 光流计算完成，耗时: ${duration}秒 ($((duration/60))分钟)"
+    else
+        echo "  ❌ 错误: 找不到compute_optical_flow.py脚本"
+        exit 1
+    fi
 
     echo "  ▶️ [Step C] 创建云端配置文件..."
-    python "$PREPROCESSING_SCRIPTS_DIR/create_final_yaml.py"
-    echo "  ✅ 配置文件创建完成。"
+    if [ -f "$PREPROCESSING_SCRIPTS_DIR/create_final_yaml.py" ]; then
+        python "$PREPROCESSING_SCRIPTS_DIR/create_final_yaml.py"
+        echo "  ✅ 配置文件创建完成。"
+    else
+        echo "  ❌ 错误: 找不到create_final_yaml.py脚本"
+        exit 1
+    fi
 
     echo "🎉 云端预处理流程执行完毕！"
 else
