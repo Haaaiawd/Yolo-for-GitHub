@@ -1,161 +1,154 @@
-# 基于轻量化国产大模型的高帧频弱小目标检测识别技术研究
+# YOLOv11 5通道训练 - 云端T4部署指南
 
-本项目致力于探索和实现一个基于YOLOv11的高效、轻量化的目标检测系统，特别针对高帧频场景下的弱小目标进行优化。
+## 🚀 快速部署
 
-## ✨ 功能特性
-
-- **先进的模型架构**: 基于 YOLOv11，兼顾了高精度与高效率。
-- **弱小目标优化**: 采用多尺度特征融合等策略，提升对微小目标的检测能力。
-- **一键启动**: 提供封装好的 Shell 脚本，简化训练流程，避免参数错误。
-- **容器化部署**: 内置 `Dockerfile`，支持一键式环境打包与部署，确保环境一致性。
-- **清晰的项目结构**: 代码、配置、文档分离，易于理解和维护。
-
-## 📂 目录结构
-
-```
-Yolo-for-GitHub/
-├── configs/                # 存放数据集和训练的配置文件
-├── docs/                   # 存放项目相关的所有文档
-├── eais_deployment/        # 存放EAIS平台部署相关的文件
-├── scripts/                # 存放数据预处理等辅助脚本
-├── models/                 # 存放预训练模型 (如 yolo11x.pt)
-├── Dockerfile              # 用于构建Docker容器的配置文件
-├── README.md               # 项目介绍文档
-├── requirements.txt        # 项目Python依赖列表
-├── start_training.sh       # [核心] 项目唯一推荐的启动脚本
-└── train_yolov11.py        # [核心] 项目唯一的训练脚本
-```
-
-## 🚀 一键启动训练 (唯一推荐方式)
-
-我们提供了一个 `start_training.sh` 脚本，可以实现一键启动训练，无需手动修改任何Python代码。
-
-### 1. 准备云端环境
-
-在您的云端服务器上，确保您的目录结构满足以下**约定**：
-
-```
-/home/user/workspace/  (可以是任何根目录)
-├── datasets/
-│   └── tiaozhanbei_sequence_split/  <-- 您上传的、已分割好的数据集
-│       ├── images/
-│       ├── labels/
-│       └── tiaozhanbei_seq_data.yaml
-│
-└── Yolo-for-GitHub/                 <-- 从 Git 克隆的本项目
-    ├── models/
-    │   └── yolo11x.pt               <-- [必须] 请将 yolo11x.pt 模型放于此处
-    ├── scripts/
-    ├── configs/
-    └── start_training.sh
-```
-
-**操作步骤**:
-1.  **克隆本项目**:
-    ```bash
-    git clone https://github.com/Your-Username/Yolo-for-GitHub.git
-    ```
-2.  **上传数据集**:
-    将您本地已处理好的 `tiaozhanbei_sequence_split` 文件夹，整个上传到与 `Yolo-for-GitHub` **并列**的 `datasets` 文件夹中。
-
-3.  **准备预训练模型**:
-    将您的预训练权重 `yolo11x.pt` 放入 `Yolo-for-GitHub/models/` 目录下。如果找不到，脚本会尝试自动下载。
-
-### 2. 执行一键启动脚本
-
-进入项目目录，并赋予脚本执行权限，然后运行它。
-
+### 1. 环境准备
 ```bash
+# 克隆项目到云端环境
+git clone <your-repo-url>
 cd Yolo-for-GitHub
-chmod +x start_training.sh
-./start_training.sh
+
+# 运行环境设置脚本
+bash setup_cloud_environment.sh
 ```
 
-脚本会自动寻找数据集配置、检查模型、并启动 `train_yolov11.py` 脚本进行训练。训练结果将保存在 `Yolo-for-GitHub` 外的 `training_runs` 文件夹中，以保持项目目录的干净。
+### 2. 数据集上传
+**重要**: 只需上传图像和标签，光流数据将在云端自动计算！
 
-## 🛡️ 如何防止云实例休眠/断线 (重要)
+确保数据集结构如下：
+```
+../datasets/balanced_tiaozhanbei_split/
+├── images/
+│   ├── train/
+│   ├── val/
+│   └── test/
+└── labels/
+    ├── train/
+    ├── val/
+    └── test/
+```
 
-长时间在云端训练时，为防止SSH断开或云平台自动休眠导致训练中断，强烈建议使用 `tmux`。
+**注意**:
+- ❌ **不需要**上传 `flow/` 目录（文件太大）
+- ✅ 光流数据将在云端T4环境中自动计算（速度更快）
+- ⏱️ 首次运行时会自动计算光流，大约需要10-30分钟
 
-1.  **安装 tmux** (如果您的服务器没有的话):
-    ```bash
-    # 如果您是 root 用户 (提示符为 #)
-    apt update && apt install -y tmux
-    
-    # 如果您是普通用户 (提示符为 $)
-    sudo apt update && sudo apt install -y tmux
-    ```
-
-2.  **创建并进入 tmux 会话**:
-    ```bash
-    tmux new -s training
-    ```
-
-3.  **在 tmux 会话中开始训练**:
-    ```bash
-    cd /path/to/Yolo-for-GitHub/
-    ./start_training.sh
-    ```
-
-4.  **安全离开会话**:
-    按下组合键 `Ctrl + b`，然后松开，再按 `d`。现在您可以安全关闭终端，训练将在后台继续。
-
-5.  **重连会话查看进度**:
-    重新登录服务器后，运行 `tmux attach -t training` 即可。
-
-## 📖 数据集准备
-
-(此部分保持不变，因为 `scripts/create_sequence_split.py` 仍然是准备数据的关键步骤)
-
-**警告**: 为了满足高帧频任务的要求，数据集**必须**按视频序列进行分割，以保证帧的连续性。随机分割帧会破坏时序信息，导致模型性能下降。
-
-本项目提供了一个专用脚本 `scripts/create_sequence_split.py` 来完成此项重要任务。
-
-1.  **准备原始数据集**:
-    请确保您的原始数据集包含 `images_diff` 和 `labels_diff` 文件夹，并且在这两个文件夹内部，数据是按序列组织的（例如 `data01`, `data02`, ...）。
-    ```
-    <your_original_dataset_root>/
-    ├── images_diff/
-    │   ├── data01/
-    │   ├── data02/
-    │   └── ...
-    └── labels_diff/
-        ├── data01/
-        ├── data02/
-        └── ...
-    ```
-
-2.  **运行序列分割脚本**:
-    执行以下命令来创建符合训练要求的新数据集。
-    ```bash
-    python scripts/create_sequence_split.py \
-      --source-dir /path/to/your_original_dataset_root \
-      --dest-dir /path/to/your_new_dataset_output
-    ```
-    -   `--source-dir`: 指向您准备好的原始数据集的根目录。
-    -   `--dest-dir`: 指定一个新目录，用于存放分割后的数据集。
-
-    脚本执行后，将在 `<dest-dir>` 目录下生成正确的 `images/`、`labels/` 目录结构以及一个 `tiaozhanbei_seq_data.yaml` 配置文件。
-
-### 模型训练
-
-在训练时，请确保使用新脚本生成的 `tiaozhanbei_seq_data.yaml` 配置文件。
-
-**示例：使用GPU进行训练**
+### 3. 启动训练
 ```bash
-python train_yolov11_gpu_optimized.py \
-  --data /path/to/your_new_dataset_output/tiaozhanbei_seq_data.yaml \
-  --weights ./path/to/pretrained_model.pt \
-  --epochs 100 \
-  --batch-size 16 \
-  --project ./runs/train \
-  --name seq_split_experiment_1
+# 检查环境
+python3 check_cloud_environment.py
+
+# 开始训练（包含自动光流计算）
+bash start_training.sh
 ```
 
-### 模型推理
+**首次运行流程**:
+1. 🔍 检查数据集结构
+2. 🌊 自动计算光流数据（10-30分钟）
+3. 📝 生成训练配置文件
+4. 🚀 开始5通道模型训练
 
-(待补充，需要一个 `detect.py` 脚本)
+**后续运行**: 如果光流数据已存在，将直接开始训练
 
-## 🙏 致谢
+## 📊 T4 GPU优化配置
 
-本项目的部分研究受到了以下工作的启发... (在此处添加致谢) 
+### 推荐训练参数
+- **Batch Size**: 16-32 (根据显存调整)
+- **Image Size**: 640 (平衡精度和速度)
+- **Epochs**: 100-200
+- **Learning Rate**: 自动调整
+
+### 预期性能
+- **T4 GPU (16GB)**: 
+  - Batch Size 16: ~6-8小时/100 epochs
+  - Batch Size 32: ~4-5小时/100 epochs (如果显存足够)
+
+## 🔧 配置文件说明
+
+### 模型配置
+- **模型文件**: `models/yolo11x.pt` (预训练模型)
+- **输入通道**: 5通道 (RGB + 2通道光流)
+- **输出类别**: 6类 (drone, bus, ship, car, cyclist, pedestrian)
+
+### 数据配置
+- **云端配置**: `configs/tiaozhanbei_cloud.yaml` (相对路径)
+- **本地配置**: `configs/tiaozhanbei_final.yaml` (绝对路径)
+
+## 📈 监控训练
+
+### 实时监控
+```bash
+# 查看训练日志
+tail -f runs/train/yolo11x_5channel_t4_exp1/train.log
+
+# 查看GPU使用情况
+nvidia-smi -l 1
+```
+
+### 训练结果
+训练结果保存在：
+- **模型权重**: `runs/train/yolo11x_5channel_t4_exp1/weights/`
+- **训练图表**: `runs/train/yolo11x_5channel_t4_exp1/`
+- **验证结果**: `runs/train/yolo11x_5channel_t4_exp1/val/`
+
+## 🛠️ 故障排除
+
+### 常见问题
+
+1. **CUDA不可用**
+   ```bash
+   # 检查CUDA安装
+   nvidia-smi
+   python3 -c "import torch; print(torch.cuda.is_available())"
+   ```
+
+2. **显存不足**
+   - 减小batch_size: `bash start_training.sh --batch 8`
+   - 减小图像尺寸: `bash start_training.sh --imgsz 512`
+
+3. **数据集路径错误**
+   - 检查数据集是否在正确位置
+   - 确认使用了正确的配置文件
+
+### 性能优化
+
+1. **混合精度训练** (自动启用)
+2. **数据加载优化** (多进程)
+3. **GPU内存优化** (梯度累积)
+
+## 📝 训练命令参考
+
+```bash
+# 基础训练
+bash start_training.sh
+
+# 自定义参数训练
+bash start_training.sh --epochs 150 --batch 16
+
+# 恢复训练
+bash start_training.sh --resume runs/train/yolo11x_5channel_t4_exp1/weights/last.pt
+
+# 调试模式
+bash start_training.sh --epochs 1 --batch 1 --imgsz 320
+```
+
+## 🎯 预期结果
+
+### 训练指标
+- **mAP50**: 目标 >0.7
+- **mAP50-95**: 目标 >0.5
+- **训练损失**: 应持续下降
+- **验证损失**: 应与训练损失趋势一致
+
+### 模型性能
+- **推理速度**: ~10-15ms/image (T4 GPU)
+- **模型大小**: ~110MB (YOLOv11x)
+- **精度**: 预期比3通道模型提升5-10%
+
+## 📞 支持
+
+如遇问题，请检查：
+1. 环境检查脚本输出
+2. 训练日志文件
+3. GPU监控信息
+4. 数据集完整性
